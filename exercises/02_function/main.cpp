@@ -4,6 +4,7 @@
 // NOTICE: cppreference 中的示例中指出了复杂声明的解读法，建议认真阅读。
 // NOTICE: 补充由内而外读法的机翻解释 <https://learn.microsoft.com/zh-cn/cpp/c-language/interpreting-more-complex-declarators?view=msvc-170>
 
+int add(int a, int b); 
 // TODO: 在这里声明函数
 
 int main(int argc, char **argv) {
@@ -15,5 +16,6 @@ int main(int argc, char **argv) {
 }
 
 int add(int a, int b) {
+    return a + b;
     // TODO: 补全函数定义，但不要移动代码行
 }
