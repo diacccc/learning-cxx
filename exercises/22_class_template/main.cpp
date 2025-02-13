@@ -8,9 +8,17 @@ struct Tensor4D {
     T *data;
 
     Tensor4D(unsigned int const shape_[4], T const *data_) {
+        // Copy shape and compute size
         unsigned int size = 1;
-        // TODO: 填入正确的 shape 并计算 size
+        for (int i = 0; i < 4; ++i) {
+            shape[i] = shape_[i];  // Store the shape
+            size *= shape[i];       // Compute total number of elements
+        }
+    
+        // Allocate memory for data
         data = new T[size];
+    
+        // Copy the provided data
         std::memcpy(data, data_, size * sizeof(T));
     }
     ~Tensor4D() {
@@ -26,11 +34,44 @@ struct Tensor4D {
     // `others` 长度为 1 但 `this` 长度不为 1 的维度将发生广播计算。
     // 例如，`this` 形状为 `[1, 2, 3, 4]`，`others` 形状为 `[1, 2, 1, 4]`，
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
-    Tensor4D &operator+=(Tensor4D const &others) {
-        // TODO: 实现单向广播的加法
+    Tensor4D<T>& operator+=(Tensor4D const& others) {
+        // Check if the shapes are compatible
+        for (int i = 0; i < 4; ++i) {
+            if (this->shape[i] != others.shape[i] && others.shape[i] != 1) {
+                // Incompatible shape, should handle it by error or return
+                throw std::invalid_argument("Shapes are not broadcastable.");
+            }
+        }
+    
+        // Broadcasting logic
+        for (unsigned int i = 0; i < this->shape[0]; ++i) {
+            for (unsigned int j = 0; j < this->shape[1]; ++j) {
+                for (unsigned int k = 0; k < this->shape[2]; ++k) {
+                    for (unsigned int l = 0; l < this->shape[3]; ++l) {
+                        // Compute the index for `others`, considering broadcasting
+                        unsigned int index = i * this->shape[1] * this->shape[2] * this->shape[3] + 
+                                              j * this->shape[2] * this->shape[3] + 
+                                              k * this->shape[3] + l;
+    
+                        unsigned int other_index = (others.shape[0] == 1 ? 0 : i) * others.shape[1] * others.shape[2] * others.shape[3] + 
+                                                    (others.shape[1] == 1 ? 0 : j) * others.shape[2] * others.shape[3] + 
+                                                    (others.shape[2] == 1 ? 0 : k) * others.shape[3] + 
+                                                    (others.shape[3] == 1 ? 0 : l);
+    
+                        this->data[index] += others.data[other_index];
+                    }
+                }
+            }
+        }
+    
         return *this;
     }
 };
+
+// Constructor Deduction Guide
+Tensor4D(unsigned int const[4], int const*) -> Tensor4D<int>;
+Tensor4D(unsigned int const[4], float const*) -> Tensor4D<float>;
+Tensor4D(unsigned int const[4], double const*) -> Tensor4D<double>;
 
 // ---- 不要修改以下代码 ----
 int main(int argc, char **argv) {
